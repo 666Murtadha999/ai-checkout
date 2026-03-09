@@ -1,0 +1,16 @@
+# AI_Checkout/trackers/strongsort.yaml
+# StrongSORT + OSNet config for your checkout system
+
+tracker_type: strongsort
+
+# ReID model (we'll put this file in AI_Checkout/AI_Checkout/weights soon)
+reid_model_path: "weights/osnet_x0_25_msmt17.pt"
+
+# Tracking hyperparameters
+max_age: 30              # how many frames to keep lost tracks
+max_iou_distance: 0.7    # IOU distance threshold
+max_cosine_distance: 0.2 # appearance distance threshold
+nn_budget: 100           # feature gallery size
+
+# Motion compensation
+gmc_method: sparseOptFlow
