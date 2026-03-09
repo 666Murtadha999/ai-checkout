@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lane Calibration – AI Checkout</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background:#020617;
+            color:#e5e7eb;
+            margin:0;
+            padding:32px 40px;
+        }
+        .page { max-width:900px; margin:0 auto; }
+        h1 { font-size:26px; margin-bottom:4px; }
+        p  { font-size:14px; color:#cbd5f5; line-height:1.55; }
+        label { font-size:14px; display:block; margin-top:10px; }
+        input {
+            background:#020617;
+            border:1px solid #4b5563;
+            border-radius:8px;
+            padding:6px 10px;
+            color:#e5e7eb;
+            width:120px;
+            font-size:14px;
+        }
+        .row {
+            display:flex;
+            gap:12px;
+            margin-top:6px;
+        }
+        button {
+            margin-top:16px;
+            padding:8px 16px;
+            border-radius:999px;
+            border:1px solid #4b5563;
+            background:#1d4ed8;
+            color:#f9fafb;
+            cursor:pointer;
+            font-size:14px;
+        }
+        button:hover { background:#2563eb; }
+        .card {
+            background:#020617;
+            border-radius:16px;
+            padding:18px 22px;
+            box-shadow:0 18px 40px rgba(0,0,0,0.7);
+            margin-top:20px;
+        }
+        .note {
+            font-size:12px;
+            color:#9ca3af;
+            margin-top:8px;
+        }
+        .warn {
+            background:#7f1d1d;
+            color:#fee2e2;
+            border-radius:10px;
+            padding:10px 12px;
+            font-size:13px;
+            margin-top:14px;
+        }
+        code {
+            background:#0f172a;
+            padding:2px 5px;
+            border-radius:4px;
+            font-size:12px;
+        }
+        #status {
+            margin-top:10px;
+            font-size:13px;
+            color:#a5b4fc;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <h1>Lane Calibration</h1>
+    <p>
+        This page shows and updates the <code>queue_geometry</code> section of <code>config.yaml</code>.
+        For best accuracy, first run the desktop tool
+        <code>tools/calibrate_queue.py</code> and then check the values here.
+    </p>
+
+    <div class="card">
+        <h2 style="font-size:18px;margin-top:0;">Geometry values</h2>
+
+        <div class="row">
+            <div>
+                <label>NEAR X <input id="near_x" type="number"></label>
+            </div>
+            <div>
+                <label>NEAR Y <input id="near_y" type="number"></label>
+            </div>
+        </div>
+
+        <div class="row">
+            <div>
+                <label>FAR X <input id="far_x" type="number"></label>
+            </div>
+            <div>
+                <label>FAR Y <input id="far_y" type="number"></label>
+            </div>
+        </div>
+
+        <div class="row">
+            <div>
+                <label>Corridor width (px)
+                    <input id="corridor" type="number">
+                </label>
+            </div>
+            <div>
+                <label>Line length (ft)
+                    <input id="line_feet" type="number" step="0.1">
+                </label>
+            </div>
+        </div>
+
+        <button onclick="saveGeometry()">Save to config.yaml</button>
+        <div id="status"></div>
+
+        <p class="note">
+            After saving, restart <code>run_camera_bt.py</code>. When
+            <code>use_slanted_line: true</code>, the system will use these values.
+        </p>
+
+        <div class="warn">
+            <strong>Important:</strong>
+            Slanted-line calibration is meant for your 4K lane camera.
+            With a laptop webcam, keep <code>use_slanted_line: false</code> and use the
+            vertical band mode instead.
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 style="font-size:18px;margin-top:0;">Desktop tool (recommended)</h2>
+        <p>
+            1. Run: <code>python tools/calibrate_queue.py</code><br>
+            2. Left click near the cashier (NEAR point).<br>
+            3. Right click at the far end of the line (FAR point).<br>
+            4. Press <strong>s</strong> to save.<br>
+            5. Close the window and restart the lane runner.
+        </p>
+    </div>
+</div>
+
+<script>
+    async function loadGeometry() {
+        try {
+            const res = await fetch("/api/queue_geometry");
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            const g = await res.json();
+
+            const pn = g.point_near || [640, 400];
+            const pf = g.point_far  || [640, 100];
+
+            document.getElementById("near_x").value = pn[0];
+            document.getElementById("near_y").value = pn[1];
+            document.getElementById("far_x").value  = pf[0];
+            document.getElementById("far_y").value  = pf[1];
+            document.getElementById("corridor").value = g.corridor_width_px || 90;
+            document.getElementById("line_feet").value = g.line_length_feet || 40.0;
+
+            document.getElementById("status").textContent = "Loaded current geometry from config.yaml.";
+        } catch (err) {
+            document.getElementById("status").textContent = "Could not load geometry: " + err.message;
+        }
+    }
+
+    async function saveGeometry() {
+        const pn = [
+            parseFloat(document.getElementById("near_x").value),
+            parseFloat(document.getElementById("near_y").value),
+        ];
+        const pf = [
+            parseFloat(document.getElementById("far_x").value),
+            parseFloat(document.getElementById("far_y").value),
+        ];
+        const corridor = parseInt(document.getElementById("corridor").value || "90", 10);
+        const lineFeet = parseFloat(document.getElementById("line_feet").value || "40");
+
+        try {
+            const res = await fetch("/api/save_queue_geometry", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    point_near: pn,
+                    point_far: pf,
+                    corridor_width_px: corridor,
+                    line_length_feet: lineFeet
+                })
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                throw new Error(data.error || ("HTTP " + res.status));
+            }
+            document.getElementById("status").textContent =
+                "Saved! Slanted-line mode is now enabled in config.yaml.";
+        } catch (err) {
+            document.getElementById("status").textContent = "Save failed: " + err.message;
+        }
+    }
+
+    loadGeometry();
+</script>
+</body>
+</html>

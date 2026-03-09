@@ -1,0 +1,1804 @@
+5.	<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Checkout Dashboard</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #020617;
+            color: #e5e7eb;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+        }
+        .page {
+            width: 100%;
+            max-width: 1200px;
+            padding: 24px 32px;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 12px;
+        }
+        .title {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        .top-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .lane-tabs {
+            display: inline-flex;
+            background: #020617;
+            padding: 3px;
+            border-radius: 999px;
+            box-shadow: 0 0 0 1px rgba(55,65,81,0.6);
+        }
+        .lane-tab {
+            border: none;
+            background: transparent;
+            color: #9ca3af;
+            font-size: 13px;
+            padding: 6px 16px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+        .lane-tab.active {
+            background: #1d4ed8;
+            color: #f9fafb;
+            box-shadow: 0 0 0 1px rgba(59,130,246,0.8);
+        }
+
+        /* Help button */
+        .top-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .help-link {
+            font-size: 13px;
+            color: #9ca3af;
+        }
+        .help-btn {
+            border-radius: 999px;
+            border: 1px solid #4b5563;
+            background: #020617;
+            color: #e5e7eb;
+            padding: 6px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .help-btn:hover {
+            border-color: #60a5fa;
+            color: #bfdbfe;
+        }
+
+        .banner {
+            margin-bottom: 10px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            background: #fbbf24;
+            color: #111827;
+            font-size: 13px;
+            display: none;
+        }
+
+        /* 🔵 ENERGY CORE ORBS STRIP */
+        .diamond-row {
+            display: flex;
+            gap: 18px;
+            margin-bottom: 18px;
+            justify-content: flex-start;
+            align-items: flex-start;
+        }
+
+        /* wrapper so we can put text under each orb */
+        .diamond-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        .diamond-label {
+            font-size: 11px;
+            color: #9ca3af;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .diamond-card {
+            width: 86px;
+            height: 86px;
+            position: relative;
+            perspective: 900px;
+        }
+        .diamond-spin {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: orb-tilt 8s linear infinite;
+        }
+
+        .orb-glow {
+            position: absolute;
+            inset: -14px;
+            border-radius: 999px;
+            filter: blur(12px);
+            opacity: 0.9;
+            animation: orb-glow-pulse 3.6s ease-in-out infinite;
+        }
+        .orb-core {
+            position: absolute;
+            inset: 12px;
+            border-radius: 999px;
+            box-shadow:
+                0 0 18px rgba(15,23,42,0.9),
+                0 0 34px rgba(15,23,42,0.95);
+            animation: orb-core-pulse 4s ease-in-out infinite;
+        }
+        .orb-ring {
+            position: absolute;
+            inset: 4px;
+            border-radius: 999px;
+            border: 1px solid rgba(148,163,184,0.2);
+            box-shadow: 0 0 18px rgba(148,163,184,0.35);
+            background: radial-gradient(circle, transparent 55%, rgba(148,163,184,0.4));
+        }
+        .orb-ring::before {
+            content: "";
+            position: absolute;
+            inset: -2px;
+            border-radius: inherit;
+            background: conic-gradient(
+                from 0deg,
+                rgba(56,189,248,0),
+                rgba(56,189,248,0.9),
+                rgba(56,189,248,0),
+                rgba(129,140,248,0.9),
+                rgba(56,189,248,0)
+            );
+            mix-blend-mode: screen;
+            opacity: 0.9;
+            filter: blur(0.7px);
+            animation: orb-ring-spin 4.2s linear infinite;
+        }
+
+        .orb-particles {
+            position: absolute;
+            inset: 0;
+            border-radius: 999px;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(248,250,252,0.55) 0, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(191,219,254,0.4) 0, transparent 45%),
+                radial-gradient(circle at 40% 90%, rgba(248,250,252,0.25) 0, transparent 40%);
+            opacity: 0.7;
+            filter: blur(0.6px);
+            mix-blend-mode: screen;
+            animation: orb-particle-drift 12s linear infinite;
+        }
+
+        .diamond-number-wrap {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .diamond-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #f9fafb;
+            text-shadow:
+                0 0 6px rgba(15,23,42,0.9),
+                0 0 18px rgba(15,23,42,1);
+            transform: translateZ(40px);
+        }
+
+        /* per-orb color themes */
+
+        /* Orb 1 – Required lanes (cyan/blue) */
+        .orb-needed .orb-core {
+            background:
+                radial-gradient(circle at 30% 20%, #e0f2fe, #38bdf8 40%, #0ea5e9 70%, #0369a1 95%);
+            box-shadow:
+                0 0 22px rgba(56,189,248,0.8),
+                0 0 38px rgba(37,99,235,0.8);
+        }
+        .orb-needed .orb-glow {
+            background: radial-gradient(circle, rgba(56,189,248,0.45), transparent 70%);
+        }
+
+        /* Orb 2 – Currently open (aqua/green) */
+        .orb-open .orb-core {
+            background:
+                radial-gradient(circle at 30% 20%, #ecfeff, #22c55e 40%, #0d9488 75%, #064e3b 96%);
+            box-shadow:
+                0 0 22px rgba(34,197,94,0.8),
+                0 0 38px rgba(45,212,191,0.8);
+        }
+        .orb-open .orb-glow {
+            background: radial-gradient(circle, rgba(34,197,94,0.46), transparent 70%);
+        }
+
+        /* Orb 3 – Active last 30 min (indigo/violet) */
+        .orb-30 .orb-core {
+            background:
+                radial-gradient(circle at 30% 20%, #e0e7ff, #6366f1 40%, #4f46e5 70%, #4c1d95 96%);
+            box-shadow:
+                0 0 22px rgba(99,102,241,0.85),
+                0 0 38px rgba(129,140,248,0.85);
+        }
+        .orb-30 .orb-glow {
+            background: radial-gradient(circle, rgba(129,140,248,0.5), transparent 70%);
+        }
+
+        /* Orb 4 – Required in next 30 min (orange/gold) */
+        .orb-future .orb-core {
+            background:
+                radial-gradient(circle at 30% 20%, #fef9c3, #f97316 40%, #ea580c 70%, #7c2d12 96%);
+            box-shadow:
+                0 0 22px rgba(249,115,22,0.9),
+                0 0 38px rgba(234,88,12,0.85);
+        }
+        .orb-future .orb-glow {
+            background: radial-gradient(circle, rgba(249,115,22,0.5), transparent 70%);
+        }
+
+        /* animations */
+        @keyframes orb-tilt {
+            0%   { transform: rotateX(14deg) rotateY(0deg); }
+            25%  { transform: rotateX(10deg) rotateY(20deg); }
+            50%  { transform: rotateX(14deg) rotateY(180deg); }
+            75%  { transform: rotateX(18deg) rotateY(320deg); }
+            100% { transform: rotateX(14deg) rotateY(360deg); }
+        }
+        @keyframes orb-ring-spin {
+            0%   { transform: rotateZ(0deg) translateZ(20px); }
+            100% { transform: rotateZ(360deg) translateZ(20px); }
+        }
+        @keyframes orb-glow-pulse {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50%      { opacity: 1;   transform: scale(1.08); }
+        }
+        @keyframes orb-core-pulse {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.05); }
+        }
+        @keyframes orb-particle-drift {
+            0%   { transform: translate3d(0,0,0); }
+            50%  { transform: translate3d(-4px,3px,0); }
+            100% { transform: translate3d(0,0,0); }
+        }
+
+        @media (max-width: 768px) {
+            .diamond-card {
+                width: 70px;
+                height: 70px;
+            }
+            .diamond-number {
+                font-size: 26px;
+            }
+        }
+
+        /* KPI strip at top */
+        .kpi-strip {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .kpi-card {
+            background: #020617;
+            border-radius: 12px;
+            padding: 10px 12px;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.7);
+            border: 1px solid #111827;
+        }
+        .kpi-label {
+            font-size: 11px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 4px;
+        }
+        .kpi-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .kpi-sub {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+        .kpi-highlight {
+            color: #4ade80;
+        }
+        .kpi-danger {
+            color: #f97373;
+        }
+        .kpi-summary {
+            margin-top: 4px;
+            margin-bottom: 4px;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 2.2fr) minmax(0, 2.3fr);
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .lane-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .card {
+            background: #020617;
+            padding: 18px 22px;
+            border-radius: 16px;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.7);
+            min-width: 320px;
+        }
+        .card.secondary {
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+            opacity: 0.95;
+        }
+        .card.small {
+            padding: 14px 18px;
+            box-shadow: 0 14px 32px rgba(0,0,0,0.6);
+        }
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            font-size: 11px;
+            border-radius: 999px;
+            background: #1d4ed8;
+            color: white;
+            margin-left: 6px;
+        }
+        .subtitle {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 12px;
+        }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+            font-size: 14px;
+        }
+        .label {
+            color: #9ca3af;
+        }
+        .value {
+            font-weight: 600;
+        }
+        .alerts {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #111827;
+            font-size: 13px;
+        }
+        .alert-pill {
+            display: inline-block;
+            background: #b91c1c;
+            color: #fee2e2;
+            padding: 3px 8px;
+            border-radius: 999px;
+            margin-right: 6px;
+            margin-top: 4px;
+        }
+        .status {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 8px;
+        }
+        .links {
+            margin-top: 8px;
+            font-size: 11px;
+        }
+        .links a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .chart-card {
+            background: #020617;
+            padding: 18px 20px;
+            border-radius: 16px;
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.6);
+            min-height: 360px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .chart-title {
+            font-size: 14px;
+            color: #e5e7eb;
+            margin-bottom: 2px;
+        }
+        .chart-subtitle {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        /* Lane health + report */
+        .health-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+        .health-pill {
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .health-healthy {
+            background: rgba(22,163,74,0.15);
+            color: #bbf7d0;
+            border: 1px solid rgba(22,163,74,0.7);
+        }
+        .health-busy {
+            background: rgba(234,179,8,0.18);
+            color: #fef9c3;
+            border: 1px solid rgba(234,179,8,0.8);
+        }
+        .health-critical {
+            background: rgba(185,28,28,0.18);
+            color: #fee2e2;
+            border: 1px solid rgba(185,28,28,0.8);
+        }
+        .health-idle {
+            background: rgba(148,163,184,0.18);
+            color: #e5e7eb;
+            border: 1px solid rgba(148,163,184,0.8);
+        }
+        .mini-text {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px 16px;
+            margin-top: 6px;
+        }
+        .report-item-label {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+        .report-item-value {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* Alert history list */
+        .alerts-history {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #111827;
+            font-size: 12px;
+            max-height: 130px;
+            overflow-y: auto;
+        }
+        .alert-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(15,23,42,0.9);
+        }
+        .alert-entry-time {
+            color: #9ca3af;
+            font-size: 11px;
+        }
+        .alert-entry-text {
+            color: #fee2e2;
+            font-size: 12px;
+        }
+
+        /* HEATMAP styles */
+        .heatmap-container {
+            margin-top: 8px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+        .heatmap-grid {
+            display: grid;
+            gap: 2px;
+            align-items: stretch;
+            margin-top: 4px;
+        }
+        .heatmap-header-cell {
+            font-size: 11px;
+            padding: 2px 4px;
+            color: #9ca3af;
+        }
+        .heatmap-hour-cell {
+            font-size: 11px;
+            padding: 2px 4px;
+            color: #9ca3af;
+            white-space: nowrap;
+        }
+        .heatmap-lane-cell {
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid #111827;
+            background: #020617;
+        }
+        .heatmap-legend {
+            margin-top: 6px;
+            font-size: 11px;
+            color: #6b7280;
+        }
+
+        /* AI decision strip */
+        .ai-strip {
+            margin-bottom: 14px;
+        }
+        .ai-actions {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .ai-actions button {
+            border-radius: 999px;
+            border: 1px solid #4b5563;
+            background: #020617;
+            color: #e5e7eb;
+            padding: 4px 10px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .ai-actions button:hover {
+            border-color: #60a5fa;
+            color: #bfdbfe;
+        }
+        .ai-countdown {
+            font-size: 11px;
+            color: #e5e7eb;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="top-bar">
+        <div class="top-left">
+            <div class="title">AI Checkout – Lane analytics</div>
+            <div class="lane-tabs">
+                <button class="lane-tab active" data-lane="1">Lane 1</button>
+                <button class="lane-tab" data-lane="2">Lane 2</button>
+                <button class="lane-tab" data-lane="all">All</button>
+            </div>
+        </div>
+
+        <!-- Help area -->
+        <div class="top-right">
+            <span class="help-link">Need guidance?</span>
+            <a href="/help" target="_blank" class="help-btn">
+                <span>❓ Help &amp; Settings</span>
+            </a>
+            <a href="/calibrate" target="_blank" class="help-btn">
+                <span>📐 Lane Calibration</span>
+            </a>
+        </div>
+    </div>
+
+    <div id="global-banner" class="banner"></div>
+
+    <!-- 🔵 FOUR ENERGY CORE ORBS -->
+    <div class="diamond-row">
+        <!-- Required lanes (now) -->
+        <div class="diamond-wrap">
+            <div class="diamond-card orb-needed" aria-label="Required lanes now">
+                <div class="diamond-spin">
+                    <div class="orb-glow"></div>
+                    <div class="orb-core"></div>
+                    <div class="orb-ring"></div>
+                    <div class="orb-particles"></div>
+                    <div class="diamond-number-wrap">
+                        <div id="diamond-needed" class="diamond-number">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="diamond-label">Required lanes (now)</div>
+        </div>
+
+        <!-- Currently open lanes -->
+        <div class="diamond-wrap">
+            <div class="diamond-card orb-open" aria-label="Currently open lanes">
+                <div class="diamond-spin">
+                    <div class="orb-glow"></div>
+                    <div class="orb-core"></"></div>
+                <div class="orb-ring"></div>
+                <div class="orb-particles"></div>
+                <div class="diamond-number-wrap">
+                    <div id="diamond-open-now" class="diamond-number">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="diamond-label">Open now</div>
+    </div>
+
+    <!-- Lanes active last 30 minutes -->
+    <div class="diamond-wrap">
+        <div class="diamond-card orb-30" aria-label="Lanes active last 30 minutes">
+            <div class="diamond-spin">
+                <div class="orb-glow"></div>
+                <div class="orb-core"></div>
+                <div class="orb-ring"></div>
+                <div class="orb-particles"></div>
+                <div class="diamond-number-wrap">
+                    <div id="diamond-open-30" class="diamond-number">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="diamond-label">Active last 30 min</div>
+    </div>
+
+    <!-- Required lanes in the NEXT 30 minutes -->
+    <div class="diamond-wrap">
+        <div class="diamond-card orb-future" aria-label="Required lanes in next 30 minutes">
+            <div class="diamond-spin">
+                <div class="orb-glow"></div>
+                <div class="orb-core"></div>
+                <div class="orb-ring"></div>
+                <div class="orb-particles"></div>
+                <div class="diamond-number-wrap">
+                    <div id="diamond-needed-30" class="diamond-number">0</div>
+                </div>
+            </div>
+        </div>
+        <div class="diamond-label">Next 30 min Demand</div>
+    </div>
+</div>
+
+<!-- 🧠 AI Lane Decision strip -->
+<div id="ai-strip" class="card small ai-strip">
+    <div class="card-header">
+        <div class="card-title" style="font-size: 15px;">AI lane decision</div>
+        <span id="ai-status-pill" class="health-pill health-idle">Idle</span>
+    </div>
+    <div class="subtitle" id="ai-title">
+        Waiting for data…
+    </div>
+    <div class="mini-text" id="ai-detail">
+        Once lanes are active, the AI will recommend when to open or close lanes.
+    </div>
+    <div class="ai-countdown" id="ai-countdown"></div>
+    <div class="mini-text" id="ai-hint" style="margin-top: 4px;"></div>
+    <div class="ai-actions">
+        <button type="button" onclick="sendAiDecisionAction('done')">✔ Mark done</button>
+        <button type="button" onclick="sendAiDecisionAction('snooze')">🔕 Snooze 10 min</button>
+        <button type="button" onclick="sendAiDecisionAction('cannot')">🚫 Can't open now</button>
+    </div>
+</div>
+
+<!-- Manager KPI strip -->
+<div class="kpi-strip">
+    <div class="kpi-card">
+        <div class="kpi-label">People served today</div>
+        <div id="kpi-served" class="kpi-value kpi-highlight">–</div>
+        <div class="kpi-sub">Approximate completions</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Avg wait today</div>
+        <div id="kpi-avg-wait" class="kpi-value">–</div>
+        <div class="kpi-sub">Across today’s updates</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Worst wait today</div>
+        <div id="kpi-max-wait" class="kpi-value kpi-danger">–</div>
+        <div class="kpi-sub">Highest estimated wait</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Busiest hour</div>
+        <div id="kpi-busiest-hour" class="kpi-value">–</div>
+        <div class="kpi-sub">By line load today</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Service quality</div>
+        <div id="kpi-sla" class="kpi-value kpi-highlight">–</div>
+        <div class="kpi-sub">Updates under 2 minutes</div>
+    </div>
+</div>
+<div id="kpi-summary" class="kpi-summary">
+    Today summary: waiting for data…
+</div>
+
+<div class="layout">
+    <div class="lane-column">
+        <!-- Lane health + report card -->
+        <div class="card small" id="card-health">
+            <div class="card-header">
+                <div class="card-title" style="font-size: 15px;">Lane health overview</div>
+            </div>
+            <div class="subtitle" id="health-subtitle">Monitoring current lane status and recent performance.</div>
+
+            <div class="health-status">
+                <span id="health-pill" class="health-pill health-idle">Idle</span>
+                <span id="health-text" class="mini-text">No lane data yet.</span>
+            </div>
+
+            <div class="mini-text" id="health-rebalance" style="margin-top: 2px;"></div>
+
+            <div style="margin-top: 10px; font-size: 12px; color: #9ca3af;">Recent lane report</div>
+            <div class="report-grid">
+                <div>
+                    <div class="report-item-label">Avg customers</div>
+                    <div id="report-avg-customers" class="report-item-value">–</div>
+                </div>
+                <div>
+                    <div class="report-item-label">Max customers</div>
+                    <div id="report-max-customers" class="report-item-value">–</div>
+                </div>
+                <div>
+                    <div class="report-item-label">Avg wait</div>
+                    <div id="report-avg-wait" class="report-item-value">–</div>
+                </div>
+                <div>
+                    <div class="report-item-label">Max wait</div>
+                    <div id="report-max-wait" class="report-item-value">–</div>
+                </div>
+            </div>
+            <div class="mini-text" id="report-scope" style="margin-top: 4px;">Based on recent history.</div>
+
+            <!-- AI lane forecast text -->
+            <div class="mini-text" id="forecast-lane-text" style="margin-top: 6px;">
+                AI Forecast: waiting for data…
+            </div>
+        </div>
+
+        <!-- Main lane card -->
+        <div class="card" id="card-main">
+            <div class="card-header">
+                <div>
+                    <span class="card-title" id="card-title-main">Lane – Status</span>
+                    <span class="badge">LIVE</span>
+                </div>
+            </div>
+            <div class="subtitle" id="subtitle-main">Prototype dashboard</div>
+
+            <div class="row">
+                <div class="label">Customers in line (adults)</div>
+                <div class="value" id="customers-main">–</div>
+            </div>
+            <div class="row">
+                <div class="label">Items on belt</div>
+                <div class="value" id="items-main">–</div>
+            </div>
+            <div class="row">
+                <div class="label">Estimated wait</div>
+                <div class="value" id="wait-main">–</div>
+            </div>
+            <div class="row">
+                <div class="label">Line length (approx)</div>
+                <div class="value" id="line-main">–</div>
+            </div>
+
+            <div class="alerts">
+                <div class="label">Alerts</div>
+                <div id="alerts-main"></div>
+            </div>
+
+            <div class="status" id="status-main">Connecting to backend…</div>
+            <div class="links">
+                Customer screen (Lane 1): <a href="/customer" target="_blank">Open in new tab</a><br>
+                Help &amp; Settings: <a href="/help" target="_blank">Open help page</a>
+            </div>
+        </div>
+
+        <!-- Secondary lane card -->
+        <div class="card secondary" id="card-secondary" style="display:none;">
+            <div class="card-header">
+                <div>
+                    <span class="card-title" id="card-title-sec">Lane – Status</span>
+                    <span class="badge">LIVE</span>
+                </div>
+            </div>
+            <div class="subtitle" id="subtitle-sec">Prototype dashboard</div>
+
+            <div class="row">
+                <div class="label">Customers in line (adults)</div>
+                <div class="value" id="customers-sec">–</div>
+            </div>
+            <div class="row">
+                <div class="label">Items on belt</div>
+                <div class="value" id="items-sec">–</div>
+            </div>
+            <div class="row">
+                <div class="label">Estimated wait</div>
+                <div class="value" id="wait-sec">–</div>
+            </div>
+            <div class="row">
+                <div class="label">Line length (approx)</div>
+                <div class="value" id="line-sec">–</div>
+            </div>
+
+            <div class="alerts">
+                <div class="label">Alerts</div>
+                <div id="alerts-sec"></div>
+            </div>
+
+            <div class="status" id="status-sec">Waiting for data…</div>
+        </div>
+    </div>
+
+    <!-- Analytics + alert history + HEATMAP -->
+    <div>
+        <div class="chart-card">
+            <div>
+                <div class="chart-title" id="chart-title">Lane analytics</div>
+                <div class="chart-subtitle" id="chart-subtitle">Customers and items over recent time</div>
+            </div>
+            <canvas id="historyChart" height="220"></canvas>
+
+            <div class="alerts-history">
+                <div class="label">Recent alerts</div>
+                <div id="alert-list"></div>
+            </div>
+        </div>
+
+        <!-- Heatmap card -->
+        <div class="card small" id="heatmap-card" style="margin-top: 14px;">
+            <div class="card-header">
+                <div class="card-title" style="font-size: 15px;">Today heatmap</div>
+            </div>
+            <div class="subtitle">
+                Darker squares = more people in line per hour.
+            </div>
+            <div id="heatmap-container" class="heatmap-container"></div>
+            <div id="heatmap-caption" class="heatmap-legend">
+                Waiting for data…
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let currentLane = "1";  // "1", "2", or "all"
+    let historyChart = null;
+    let latestHistory = [];
+    let latestLanesData = null;
+    let latestSingleLane = null;
+    let latestRebalanceHint = null;
+
+    // AI decision state
+    let lastAiDecision = null;
+
+    // Lane forecast info (per-lane prediction)
+    let latestLaneForecast = null;
+
+    // Store-wide required lanes in next 30 minutes
+    let latestRequiredLanes30 = null;
+
+    // update orb numbers
+    function updateDiamonds({ needed, openNow, openLast30, needed30 }) {
+        const d1 = document.getElementById("diamond-needed");
+        const d2 = document.getElementById("diamond-open-now");
+        const d3 = document.getElementById("diamond-open-30");
+        const d4 = document.getElementById("diamond-needed-30");
+
+        if (d1) d1.textContent = Number.isFinite(needed) ? needed : 0;
+        if (d2) d2.textContent = Number.isFinite(openNow) ? openNow : 0;
+        if (d3) d3.textContent = Number.isFinite(openLast30) ? openLast30 : 0;
+        if (d4) d4.textContent = Number.isFinite(needed30) ? needed30 : 0;
+    }
+
+    // compute metrics for the 4 orbs
+    function recomputeDiamondMetrics() {
+        let needed = 0;
+        let openNow = 0;
+        let open30 = 0;
+        const now = new Date();
+
+        if (currentLane === "all") {
+            if (Array.isArray(latestLanesData) && latestLanesData.length > 0) {
+                let totalCustomers = 0;
+                latestLanesData.forEach(l => {
+                    const c = l.customers_in_line || 0;
+                    totalCustomers += c;
+                    const eta = l.estimated_wait_seconds || 0;
+                    const isOpen = c > 0 || eta > 0;
+                    if (isOpen) openNow += 1;
+                });
+                if (totalCustomers === 0) {
+                    needed = openNow > 0 ? openNow : 0;
+                } else {
+                    needed = Math.max(1, Math.ceil(totalCustomers / 4));
+                }
+            }
+            if (Array.isArray(latestHistory) && latestHistory.length > 0) {
+                const cutoff = now.getTime() - 30 * 60 * 1000;
+                const seen = new Set();
+                latestHistory.forEach(h => {
+                    if (!h.timestamp) return;
+                    const t = new Date(h.timestamp);
+                    if (isNaN(t)) return;
+                    if (t.getTime() >= cutoff) {
+                        if (h.lane_id !== undefined && h.lane_id !== null) {
+                            seen.add(String(h.lane_id));
+                        } else {
+                            seen.add("?");
+                        }
+                    }
+                });
+                open30 = seen.size;
+            }
+        } else {
+            if (latestSingleLane) {
+                const c = latestSingleLane.customers_in_line || 0;
+                const eta = latestSingleLane.estimated_wait_seconds || 0;
+                const isOpen = c > 0 || eta > 0;
+                needed = c > 0 ? 1 : 0;
+                openNow = isOpen ? 1 : 0;
+            }
+            if (Array.isArray(latestHistory) && latestHistory.length > 0) {
+                const cutoff = now.getTime() - 30 * 60 * 1000;
+                let active = false;
+                latestHistory.forEach(h => {
+                    if (!h.timestamp) return;
+                    const t = new Date(h.timestamp);
+                    if (isNaN(t)) return;
+                    if (t.getTime() >= cutoff) {
+                        active = true;
+                    }
+                });
+                open30 = active ? 1 : 0;
+            }
+        }
+
+        // Required lanes in next 30 min (store-wide forecast)
+        let needed30 = 0;
+        if (typeof latestRequiredLanes30 === "number" && latestRequiredLanes30 >= 0) {
+            needed30 = latestRequiredLanes30;
+        }
+
+        updateDiamonds({ needed, openNow, openLast30: open30, needed30 });
+    }
+
+    function setActiveTab(laneKey) {
+        currentLane = laneKey;
+        document.querySelectorAll(".lane-tab").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.lane === laneKey);
+        });
+        const chartTitle = document.getElementById("chart-title");
+        const chartSubtitle = document.getElementById("chart-subtitle");
+        if (laneKey === "all") {
+            chartTitle.textContent = "Lane analytics – All lanes";
+            chartSubtitle.textContent = "Combined customers and items over time";
+        } else {
+            chartTitle.textContent = `Lane analytics – Lane ${laneKey}`;
+            chartSubtitle.textContent = "Customers and items over recent time";
+        }
+    }
+
+    document.querySelectorAll(".lane-tab").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const lane = btn.dataset.lane;
+            setActiveTab(lane);
+            refreshAll();
+        });
+    });
+
+    function fillCard(prefix, laneData) {
+        const titleEl = document.getElementById(prefix === "main" ? "card-title-main" : "card-title-sec");
+        const subtitleEl = document.getElementById(prefix === "main" ? "subtitle-main" : "subtitle-sec");
+        const customersEl = document.getElementById(prefix === "main" ? "customers-main" : "customers-sec");
+        const itemsEl = document.getElementById(prefix === "main" ? "items-main" : "items-sec");
+        const waitEl = document.getElementById(prefix === "main" ? "wait-main" : "wait-sec");
+        const lineEl = document.getElementById(prefix === "main" ? "line-main" : "line-sec");
+        const alertsContainer = document.getElementById(prefix === "main" ? "alerts-main" : "alerts-sec");
+        const statusEl = document.getElementById(prefix === "main" ? "status-main" : "status-sec");
+
+        if (!laneData) {
+            titleEl.textContent = "Lane – Status";
+            subtitleEl.textContent = "No data";
+            customersEl.textContent = "–";
+            itemsEl.textContent = "–";
+            waitEl.textContent = "–";
+            lineEl.textContent = "–";
+            alertsContainer.innerHTML = "";
+            statusEl.textContent = "Waiting for data…";
+            return;
+        }
+
+        const laneLabel = laneData.lane_id === "all"
+            ? "All lanes"
+            : `Lane ${laneData.lane_id}`;
+
+        titleEl.textContent = `${laneLabel} – Status`;
+        subtitleEl.textContent = "AI Checkout – prototype dashboard";
+
+        customersEl.textContent = laneData.customers_in_line ?? "0";
+        itemsEl.textContent = laneData.items_on_belt ?? "0";
+
+        if (laneData.estimated_wait_seconds !== undefined) {
+            waitEl.textContent = Math.round(laneData.estimated_wait_seconds) + " sec";
+        } else {
+            waitEl.textContent = "–";
+        }
+
+        if (laneData.line_length_feet !== undefined) {
+            const feet = Number(laneData.line_length_feet) || 0;
+            lineEl.textContent = feet.toFixed(1) + " ft";
+        } else {
+            lineEl.textContent = "–";
+        }
+
+        alertsContainer.innerHTML = "";
+        const alerts = Array.isArray(laneData.alerts) ? laneData.alerts : [];
+        if (alerts.length === 0) {
+            const span = document.createElement("span");
+            span.className = "value";
+            span.textContent = "None";
+            alertsContainer.appendChild(span);
+        } else {
+            alerts.forEach(a => {
+                const pill = document.createElement("span");
+                pill.className = "alert-pill";
+                pill.textContent = a;
+                alertsContainer.appendChild(pill);
+            });
+        }
+
+        statusEl.textContent = laneData.last_update_iso
+            ? "Last update: " + laneData.last_update_iso
+            : "Updating…";
+    }
+
+    async function refreshLaneCards() {
+        const banner = document.getElementById("global-banner");
+        banner.style.display = "none";
+        banner.textContent = "";
+
+        if (currentLane === "all") {
+            const res = await fetch("/lanes");
+            if (!res.ok) return;
+            const data = await res.json();
+            const lanes = data.lanes || [];
+            latestLanesData = lanes;
+            latestSingleLane = null;
+            latestRebalanceHint = data.rebalance_hint || null;
+
+            fillCard("main", lanes[0] || null);
+
+            const secCard = document.getElementById("card-secondary");
+            if (lanes.length > 1) {
+                secCard.style.display = "";
+                fillCard("sec", lanes[1]);
+            } else {
+                secCard.style.display = "none";
+            }
+
+            if (data.rebalance_hint) {
+                banner.textContent = data.rebalance_hint;
+                banner.style.display = "block";
+            }
+        } else {
+            const res = await fetch(`/lane_status?lane_id=${currentLane}`);
+            if (!res.ok) return;
+            const laneData = await res.json();
+            latestSingleLane = laneData;
+            latestLanesData = null;
+            latestRebalanceHint = laneData.rebalance_hint || null;
+
+            fillCard("main", laneData);
+
+            const secCard = document.getElementById("card-secondary");
+            secCard.style.display = "none";
+
+            if (laneData.rebalance_hint) {
+                banner.textContent = laneData.rebalance_hint;
+                banner.style.display = "block";
+            }
+        }
+
+        updateLaneHealthSummary();
+        recomputeDiamondMetrics();
+    }
+
+    // Format hour like "5–6 pm"
+    function formatHourRange(h) {
+        if (h === null || h === undefined || isNaN(h)) return "–";
+        const start = h % 24;
+        const end = (h + 1) % 24;
+
+        function toLabel(x) {
+            const hour12 = (x % 12) === 0 ? 12 : (x % 12);
+            const suffix = x < 12 ? "am" : "pm";
+            return hour12 + suffix;
+        }
+
+        return `${toLabel(start)}–${toLabel(end)}`;
+    }
+
+    // Compute "today" KPIs from history
+    function updateTodayKPIs(fullHistory) {
+        const servedEl = document.getElementById("kpi-served");
+        const avgWaitEl = document.getElementById("kpi-avg-wait");
+        const maxWaitEl = document.getElementById("kpi-max-wait");
+        const busyHourEl = document.getElementById("kpi-busiest-hour");
+        const slaEl = document.getElementById("kpi-sla");
+        const summaryEl = document.getElementById("kpi-summary");
+
+        if (!Array.isArray(fullHistory) || fullHistory.length === 0) {
+            servedEl.textContent = "–";
+            avgWaitEl.textContent = "–";
+            maxWaitEl.textContent = "–";
+            busyHourEl.textContent = "–";
+            slaEl.textContent = "–";
+            summaryEl.textContent = "Today summary: no data yet.";
+            return;
+        }
+
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, "0");
+        const dd = String(now.getDate()).padStart(2, "0");
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+
+        const todayData = fullHistory.filter(h => {
+            const ts = h.timestamp || "";
+            if (ts.length < 10) return false;
+            return ts.substring(0, 10) === todayStr;
+        });
+
+        if (todayData.length === 0) {
+            servedEl.textContent = "0";
+            avgWaitEl.textContent = "–";
+            maxWaitEl.textContent = "–";
+            busyHourEl.textContent = "–";
+            slaEl.textContent = "–";
+            summaryEl.textContent = "Today summary: no updates yet for this lane view.";
+            return;
+        }
+
+        let served = 0;
+        for (let i = 1; i < todayData.length; i++) {
+            const prev = todayData[i - 1];
+            const cur = todayData[i];
+            const cPrev = prev.customers_in_line || 0;
+            const cCur = cur.customers_in_line || 0;
+            if (cCur < cPrev) {
+                served += (cPrev - cCur);
+            }
+        }
+
+        let sumEta = 0;
+        let maxEta = 0;
+        let n = 0;
+        let goodSla = 0;
+        const hourAgg = {};
+
+        for (const h of todayData) {
+            const eta = h.estimated_wait_seconds || 0;
+            const c = h.customers_in_line || 0;
+            sumEta += eta;
+            if (eta > maxEta) maxEta = eta;
+            n += 1;
+            if (eta < 120) goodSla += 1;
+
+            const ts = h.timestamp || "";
+            let hour = null;
+            try {
+                if (ts.length >= 13) {
+                    hour = parseInt(ts.substring(11, 13), 10);
+                }
+            } catch {
+                hour = null;
+            }
+            if (hour !== null && !isNaN(hour)) {
+                if (!hourAgg[hour]) {
+                    hourAgg[hour] = { sumC: 0, n: 0 };
+                }
+                hourAgg[hour].sumC += c;
+                hourAgg[hour].n += 1;
+            }
+        }
+
+        const avgEta = n > 0 ? (sumEta / n) : 0;
+        const sla = n > 0 ? Math.round((goodSla / n) * 100) : 0;
+
+        let busiestHour = null;
+        let bestAvgC = -1;
+        Object.keys(hourAgg).forEach(k => {
+            const h = parseInt(k, 10);
+            const obj = hourAgg[h];
+            if (obj && obj.n > 0) {
+                const avgC = obj.sumC / obj.n;
+                if (avgC > bestAvgC) {
+                    bestAvgC = avgC;
+                    busiestHour = h;
+                }
+            }
+        });
+
+        const avgEtaRounded = Math.round(avgEta);
+        const maxEtaRounded = Math.round(maxEta);
+
+        servedEl.textContent = String(served);
+        avgWaitEl.textContent = avgEtaRounded + " s";
+        maxWaitEl.textContent = maxEtaRounded + " s";
+        busyHourEl.textContent = busiestHour !== null ? formatHourRange(busiestHour) : "–";
+        slaEl.textContent = sla + "%";
+
+        const busyLabel = busiestHour !== null ? formatHourRange(busiestHour) : "today";
+
+        summaryEl.textContent =
+            `Today so far (${todayData.length} updates): average wait ~${avgEtaRounded}s, ` +
+            `max ~${maxEtaRounded}s. Approx. ${served} people served. ` +
+            (busiestHour !== null ? `Busiest period around ${busyLabel}. ` : "") +
+            `Service quality: ${sla}% of updates under 2 minutes.`;
+    }
+
+    async function refreshHistoryChart() {
+        try {
+            const res = await fetch(`/history?lane_id=${currentLane}`);
+            if (!res.ok) return;
+            const data = await res.json();
+            const history = data.history || [];
+
+            const recent = history.slice(-40);
+            latestHistory = recent;
+
+            const labels = recent.map(h => {
+                const ts = h.timestamp || "";
+                return ts.length >= 19 ? ts.substring(11, 19) : ts;
+            });
+
+            const customersSeries = recent.map(h => h.customers_in_line ?? 0);
+            const itemsSeries = recent.map(h => h.items_on_belt ?? 0);
+
+            const ctx = document.getElementById("historyChart").getContext("2d");
+
+            if (!historyChart) {
+                historyChart = new Chart(ctx, {
+                    type: "line",
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: "Customers",
+                                data: customersSeries,
+                                tension: 0,
+                                stepped: true
+                            },
+                            {
+                                label: "Items",
+                                data: itemsSeries,
+                                tension: 0,
+                                stepped: true
+                            }
+                        ]
+                    },
+                    options: {
+                        animation: false,
+                        plugins: {
+                            legend: {
+                                labels: {
+                                    color: "#e5e7eb",
+                                    font: { size: 11 }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: {
+                                    color: "#9ca3af",
+                                    font: { size: 10 },
+                                    maxTicksLimit: 6
+                                },
+                                grid: { color: "#111827" }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                suggestedMax: 6,
+                                ticks: {
+                                    color: "#9ca3af",
+                                    font: { size: 10 },
+                                    stepSize: 1
+                                },
+                                grid: { color: "#111827" }
+                            }
+                        }
+                    }
+                });
+            } else {
+                historyChart.data.labels = labels;
+                historyChart.data.datasets[0].data = customersSeries;
+                historyChart.data.datasets[1].data = itemsSeries;
+                historyChart.update();
+            }
+
+            updateTodayKPIs(history);
+            updateAlertHistoryList();
+            updateLaneReport();
+            recomputeDiamondMetrics();
+        } catch (err) {
+            console.log("History error:", err.message);
+        }
+    }
+
+    function classifyHealth(customers, eta) {
+        customers = customers || 0;
+        eta = eta || 0;
+        if (customers === 0 && eta === 0) return "idle";
+        if (customers <= 2 && eta < 60) return "healthy";
+        if (customers <= 4 && eta < 180) return "busy";
+        return "critical";
+    }
+
+    function updateLaneHealthSummary() {
+        const pill = document.getElementById("health-pill");
+        const textEl = document.getElementById("health-text");
+        const subtitleEl = document.getElementById("health-subtitle");
+        const rebalanceEl = document.getElementById("health-rebalance");
+
+        let laneLabel = "";
+        let customers = 0;
+        let eta = 0;
+
+        if (currentLane === "all") {
+            if (!latestLanesData || latestLanesData.length === 0) {
+                pill.textContent = "Idle";
+                pill.className = "health-pill health-idle";
+                textEl.textContent = "No active lanes yet.";
+                subtitleEl.textContent = "Monitoring all lanes.";
+                rebalanceEl.textContent = latestRebalanceHint || "";
+                return;
+            }
+            let best = latestLanesData[0];
+            for (const l of latestLanesData) {
+                if (
+                    (l.customers_in_line || 0) > (best.customers_in_line || 0) ||
+                    (
+                        (l.customers_in_line || 0) === (best.customers_in_line || 0) &&
+                        (l.estimated_wait_seconds || 0) > (best.estimated_wait_seconds || 0)
+                    )
+                ) {
+                    best = l;
+                }
+            }
+            laneLabel = `Lane ${best.lane_id}`;
+            customers = best.customers_in_line || 0;
+            eta = best.estimated_wait_seconds || 0;
+            subtitleEl.textContent = "Showing most loaded lane across the store.";
+        } else {
+            if (!latestSingleLane) {
+                pill.textContent = "Idle";
+                pill.className = "health-pill health-idle";
+                textEl.textContent = "Waiting for lane data…";
+                subtitleEl.textContent = `Monitoring Lane ${currentLane}.`;
+                rebalanceEl.textContent = latestRebalanceHint || "";
+                return;
+            }
+            laneLabel = `Lane ${latestSingleLane.lane_id}`;
+            customers = latestSingleLane.customers_in_line || 0;
+            eta = latestSingleLane.estimated_wait_seconds || 0;
+            subtitleEl.textContent = `Monitoring ${laneLabel}.`;
+        }
+
+        const health = classifyHealth(customers, eta);
+        let pillText = "";
+        let pillClass = "health-pill ";
+
+        if (health === "healthy") {
+            pillText = "Healthy";
+            pillClass += "health-healthy";
+        } else if (health === "busy") {
+            pillText = "Busy";
+            pillClass += "health-busy";
+        } else if (health === "critical") {
+            pillText = "Critical";
+            pillClass += "health-critical";
+        } else {
+            pillText = "Idle";
+            pillClass += "health-idle";
+        }
+
+        pill.textContent = pillText;
+        pill.className = pillClass;
+
+        const etaRounded = Math.round(eta);
+        textEl.textContent = `${laneLabel}: ${customers} customer(s), ETA ~ ${etaRounded}s.`;
+        rebalanceEl.textContent = latestRebalanceHint || "";
+    }
+
+    function updateLaneReport() {
+        const avgCustEl = document.getElementById("report-avg-customers");
+        const maxCustEl = document.getElementById("report-max-customers");
+        const avgWaitEl = document.getElementById("report-avg-wait");
+        const maxWaitEl = document.getElementById("report-max-wait");
+        const scopeEl = document.getElementById("report-scope");
+
+        const history = latestHistory || [];
+        const n = history.length;
+
+        if (n === 0) {
+            avgCustEl.textContent = "–";
+            maxCustEl.textContent = "–";
+            avgWaitEl.textContent = "–";
+            maxWaitEl.textContent = "–";
+            scopeEl.textContent = "No recent history yet.";
+            return;
+        }
+
+        let sumC = 0;
+        let sumEta = 0;
+        let maxC = 0;
+        let maxEta = 0;
+
+        for (const h of history) {
+            const c = h.customers_in_line || 0;
+            const eta = h.estimated_wait_seconds || 0;
+            sumC += c;
+            sumEta += eta;
+            if (c > maxC) maxC = c;
+            if (eta > maxEta) maxEta = eta;
+        }
+
+        const avgC = sumC / n;
+        const avgEta = sumEta / n;
+
+        avgCustEl.textContent = avgC.toFixed(1);
+        maxCustEl.textContent = String(maxC);
+        avgWaitEl.textContent = Math.round(avgEta) + " s";
+        maxWaitEl.textContent = Math.round(maxEta) + " s";
+
+        scopeEl.textContent = `Based on last ${n} updates.`;
+    }
+
+    function updateAlertHistoryList() {
+        const container = document.getElementById("alert-list");
+        container.innerHTML = "";
+
+        const history = latestHistory || [];
+        if (history.length === 0) {
+            const span = document.createElement("div");
+            span.className = "mini-text";
+            span.textContent = "No alerts in recent history.";
+            container.appendChild(span);
+            return;
+        }
+
+        const entries = [];
+        for (let i = history.length - 1; i >= 0 && entries.length < 10; i--) {
+            const h = history[i];
+            const alerts = Array.isArray(h.alerts) ? h.alerts : [];
+            if (alerts.length === 0) continue;
+            entries.push({
+                time: h.timestamp || "",
+                lane_id: h.lane_id || "?",
+                text: alerts.join(" | ")
+            });
+        }
+
+        if (entries.length === 0) {
+            const span = document.createElement("div");
+            span.className = "mini-text";
+            span.textContent = "No alerts in recent history.";
+            container.appendChild(span);
+            return;
+        }
+
+        entries.forEach(e => {
+            const row = document.createElement("div");
+            row.className = "alert-entry";
+
+            const line1 = document.createElement("div");
+            line1.className = "alert-entry-time";
+            const t = e.time.length >= 19 ? e.time.substring(11, 19) : e.time;
+            line1.textContent = `${t} – Lane ${e.lane_id}`;
+
+            const line2 = document.createElement("div");
+            line2.className = "alert-entry-text";
+            line2.textContent = e.text;
+
+            row.appendChild(line1);
+            row.appendChild(line2);
+            container.appendChild(row);
+        });
+    }
+
+    // HEATMAP: build from /heatmap API
+    async function refreshHeatmap() {
+        const container = document.getElementById("heatmap-container");
+        const caption = document.getElementById("heatmap-caption");
+        container.innerHTML = "";
+        caption.textContent = "Loading heatmap…";
+
+        try {
+            const res = await fetch("/heatmap");
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            const data = await res.json();
+
+            const hours = data.hours || [];
+            const lanes = data.lanes || [];
+            const matrix = data.matrix_customers || [];
+            const maxVal = data.max_customers || 0;
+
+            if (!lanes.length || !hours.length) {
+                caption.textContent = "No heatmap data yet for today.";
+                return;
+            }
+
+            const grid = document.createElement("div");
+            grid.className = "heatmap-grid";
+            grid.style.gridTemplateColumns = `80px repeat(${lanes.length}, minmax(0, 1fr))`;
+
+            // Header row
+            const empty = document.createElement("div");
+            empty.className = "heatmap-header-cell";
+            empty.textContent = "";
+            grid.appendChild(empty);
+
+            lanes.forEach(laneId => {
+                const cell = document.createElement("div");
+                cell.className = "heatmap-header-cell";
+                cell.textContent = "Lane " + laneId;
+                grid.appendChild(cell);
+            });
+
+            function hourLabel(h) {
+                const hour12 = (h % 12) === 0 ? 12 : (h % 12);
+                const suffix = h < 12 ? "am" : "pm";
+                return `${hour12}${suffix}`;
+            }
+
+            // Rows
+            for (let i = 0; i < hours.length; i++) {
+                const h = hours[i];
+
+                const hourCell = document.createElement("div");
+                hourCell.className = "heatmap-hour-cell";
+                hourCell.textContent = hourLabel(h);
+                grid.appendChild(hourCell);
+
+                const rowVals = matrix[i] || [];
+                for (let j = 0; j < lanes.length; j++) {
+                    const v = rowVals[j] || 0;
+                    const cell = document.createElement("div");
+                    cell.className = "heatmap-lane-cell";
+
+                    let alpha = 0;
+                    if (maxVal > 0) {
+                        alpha = v / maxVal;
+                    }
+                    alpha = Math.min(1, Math.max(0, alpha));
+                    const base = 189; // teal-ish
+                    const g = Math.round(base + (255 - base) * (1 - alpha));
+                    const b = 248;
+                    cell.style.backgroundColor = `rgba(56,${g},${b},${0.15 + 0.55 * alpha})`;
+
+                    grid.appendChild(cell);
+                }
+            }
+
+            container.appendChild(grid);
+            caption.textContent = "Each row is an hour of the day, each column is a lane. Darker = more people in line on average.";
+        } catch (err) {
+            caption.textContent = "Could not load heatmap data.";
+        }
+    }
+
+    // AI decision: fetch from backend and update strip
+    async function refreshAiDecision() {
+        const statusPill = document.getElementById("ai-status-pill");
+        const titleEl = document.getElementById("ai-title");
+        const detailEl = document.getElementById("ai-detail");
+        const countdownEl = document.getElementById("ai-countdown");
+        const hintEl = document.getElementById("ai-hint");
+
+        try {
+            const res = await fetch("/ai_decision");
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            const data = await res.json();
+            lastAiDecision = data || {};
+
+            const storeStatus = (data.store_status || "idle").toLowerCase();
+            const action = (data.action || "none").toLowerCase();
+            const laneId = data.lane_id;
+            const reason = data.reason || "";
+            const secondsLeft = data.seconds_until_deadline;
+            const extra = data.extra || {};
+            const rebalanceHint = extra.rebalance_hint || "";
+
+            let pillText = "Idle";
+            let pillClass = "health-pill health-idle";
+            if (storeStatus === "ok") {
+                pillText = "OK";
+                pillClass = "health-pill health-healthy";
+            } else if (storeStatus === "busy") {
+                pillText = "Busy";
+                pillClass = "health-pill health-busy";
+            } else if (storeStatus === "critical") {
+                pillText = "Critical";
+                pillClass = "health-pill health-critical";
+            } else if (storeStatus === "idle") {
+                pillText = "Idle";
+                pillClass = "health-pill health-idle";
+            }
+
+            statusPill.textContent = pillText;
+            statusPill.className = pillClass;
+
+            if (action === "open_lane") {
+                const laneLabel = laneId ? `Lane ${laneId}` : "another lane";
+                titleEl.textContent = `Recommendation: open ${laneLabel}`;
+                detailEl.textContent = reason || "High load detected – opening another lane will reduce wait time.";
+            } else if (action === "close_lane") {
+                const laneLabel = laneId ? `Lane ${laneId}` : "a lane";
+                titleEl.textContent = `Recommendation: you can close ${laneLabel}`;
+                detailEl.textContent = reason || "Traffic is light enough to close a lane without hurting service.";
+            } else {
+                if (storeStatus === "ok" || storeStatus === "idle") {
+                    titleEl.textContent = "Store load is OK – no lane changes needed.";
+                    detailEl.textContent = "AI is watching the lines and will alert you if action is needed.";
+                } else {
+                    titleEl.textContent = "AI is respecting your recent decision.";
+                    detailEl.textContent = reason || "A recommendation was recently marked as done/snoozed/cannot.";
+                }
+            }
+
+            if (typeof secondsLeft === "number" && secondsLeft > 0 && (action === "open_lane" || action === "close_lane")) {
+                const mins = Math.floor(secondsLeft / 60);
+                const secs = secondsLeft % 60;
+                const parts = [];
+                if (mins > 0) parts.push(mins + "m");
+                if (secs > 0 || mins === 0) parts.push(secs + "s");
+                countdownEl.textContent = "Soft deadline: " + parts.join(" ");
+            } else {
+                countdownEl.textContent = "";
+            }
+
+            hintEl.textContent = rebalanceHint ? ("Hint: " + rebalanceHint) : "";
+        } catch (err) {
+            console.log("AI decision error:", err.message);
+            statusPill.textContent = "Offline";
+            statusPill.className = "health-pill health-idle";
+            titleEl.textContent = "AI lane decision offline";
+            detailEl.textContent = "Could not reach /ai_decision. Check backend status.";
+            countdownEl.textContent = "";
+            hintEl.textContent = "";
+        }
+    }
+
+    async function sendAiDecisionAction(action) {
+        if (!lastAiDecision || !lastAiDecision.decision_id) {
+            return;
+        }
+        try {
+            await fetch("/ai_decision_action", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    decision_id: lastAiDecision.decision_id,
+                    action: action
+                })
+            });
+            refreshAiDecision();
+        } catch (err) {
+            console.log("AI action error:", err.message);
+        }
+    }
+
+    // Per-lane forecast: /predict_lane
+    async function refreshLaneForecast() {
+        const forecastEl = document.getElementById("forecast-lane-text");
+        if (!forecastEl) return;
+
+        if (currentLane === "all") {
+            latestLaneForecast = null;
+            forecastEl.textContent = "AI Forecast: select a specific lane to see its future load.";
+            return;
+        }
+
+        try {
+            const minsAhead = 15;
+            const res = await fetch(`/predict_lane?lane_id=${currentLane}&minutes_ahead=${minsAhead}`);
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            const data = await res.json();
+            latestLaneForecast = data;
+
+            const pc = data.predicted_customers ?? 0;
+            const waitSec = data.predicted_wait_seconds ?? 0;
+            const laneSamples = data.lane_samples ?? 0;
+            const storeSamples = data.store_samples ?? 0;
+
+            const low = Math.max(0, Math.round(pc - 1));
+            const high = Math.round(pc + 1);
+            const waitMin = (waitSec / 60).toFixed(1);
+
+            forecastEl.textContent =
+                `AI Forecast (next ${minsAhead} min): about ${low}–${high} customers, ` +
+                `~${waitMin} min wait. (lane samples: ${laneSamples}, store: ${storeSamples})`;
+        } catch (err) {
+            console.log("Lane forecast error:", err.message);
+            latestLaneForecast = null;
+            forecastEl.textContent = "AI Forecast: not enough historical data yet.";
+        }
+    }
+
+    // Store-wide required lanes for NEXT 30 minutes
+    async function refreshRequiredLanesFuture() {
+        try {
+            const res = await fetch("/forecast_required_lanes");
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            const data = await res.json();
+
+            const val = data.required_lanes;
+            if (typeof val === "number" && !isNaN(val) && val >= 0) {
+                latestRequiredLanes30 = val;
+            } else {
+                latestRequiredLanes30 = null;
+            }
+        } catch (err) {
+            console.log("Required lanes forecast error:", err.message);
+            latestRequiredLanes30 = null;
+        }
+
+        recomputeDiamondMetrics();
+    }
+
+    function refreshAll() {
+        refreshLaneCards();
+        refreshHistoryChart();
+        refreshHeatmap();
+        refreshLaneForecast();
+        refreshRequiredLanesFuture();
+    }
+
+    // Initial load + intervals
+    setActiveTab(currentLane);
+    refreshAll();
+    refreshAiDecision();
+
+    setInterval(refreshLaneCards, 1500);
+    setInterval(refreshHistoryChart, 4000);
+    setInterval(refreshHeatmap, 60000);
+    setInterval(refreshAiDecision, 5000);
+    setInterval(refreshLaneForecast, 10000);
+    setInterval(refreshRequiredLanesFuture, 20000);
+</script>
+</body>
+</html>
+
+

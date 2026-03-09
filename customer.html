@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Checkout Lanes – Customer Screen</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 55%, #000 100%);
+      color: #f9fafb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .fullscreen-hint {
+      position: fixed;
+      top: 14px;
+      right: 16px;
+      font-size: 12px;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 10;
+    }
+
+    .fs-btn {
+      border: 1px solid #4b5563;
+      background: rgba(15,23,42,0.8);
+      color: #e5e7eb;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .fs-btn:hover {
+      border-color: #60a5fa;
+      color: #bfdbfe;
+    }
+
+    .card-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.96);
+      border-radius: 28px;
+      padding: 40px 60px;
+      min-width: 520px;
+      max-width: 820px;
+      box-shadow:
+        0 0 0 1px rgba(30,64,175,0.5),
+        0 35px 80px rgba(0,0,0,0.75);
+      text-align: center;
+      position: relative;
+      animation: pulseGlow 2.4s ease-in-out infinite;
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    .card.normal {
+      box-shadow:
+        0 0 0 1px rgba(30,64,175,0.5),
+        0 35px 80px rgba(0,0,0,0.75);
+    }
+    .card.busy {
+      box-shadow:
+        0 0 0 1px rgba(251,191,36,0.8),
+        0 35px 90px rgba(0,0,0,0.85);
+    }
+    .card.critical {
+      box-shadow:
+        0 0 0 1px rgba(248,113,113,0.9),
+        0 35px 110px rgba(0,0,0,0.95);
+    }
+
+    @keyframes pulseGlow {
+      0% {
+        box-shadow:
+          0 0 0 1px rgba(30,64,175,0.6),
+          0 35px 80px rgba(0,0,0,0.9),
+          0 0 40px rgba(56,189,248,0.08);
+      }
+      50% {
+        box-shadow:
+          0 0 0 1px rgba(59,130,246,0.9),
+          0 40px 90px rgba(0,0,0,1),
+          0 0 55px rgba(56,189,248,0.22);
+      }
+      100% {
+        box-shadow:
+          0 0 0 1px rgba(30,64,175,0.6),
+          0 35px 80px rgba(0,0,0,0.9),
+          0 0 40px rgba(56,189,248,0.08);
+      }
+    }
+
+    .title {
+      font-size: 30px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #9ca3af;
+      margin-bottom: 26px;
+    }
+
+    .queue-banner {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(34,197,94,0.12);
+      color: #bbf7d0;
+      border: 1px solid rgba(34,197,94,0.5);
+      margin-bottom: 22px;
+      opacity: 0;
+      transform: translateY(-6px);
+      transition: all 0.35s ease;
+    }
+    .queue-banner.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .queue-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34,197,94,0.8);
+    }
+
+    .row {
+      margin-bottom: 22px;
+    }
+
+    .label {
+      font-size: 15px;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+
+    .wait-time {
+      font-size: 70px;
+      font-weight: 800;
+      color: #38bdf8;
+      text-shadow: 0 0 22px rgba(56,189,248,0.65);
+      letter-spacing: 0.04em;
+      transition: color 0.3s ease, text-shadow 0.3s ease;
+    }
+
+    .wait-time.normal {
+      color: #4ade80;
+      text-shadow: 0 0 22px rgba(74,222,128,0.65);
+    }
+    .wait-time.busy {
+      color: #fbbf24;
+      text-shadow: 0 0 22px rgba(251,191,36,0.7);
+    }
+    .wait-time.critical {
+      color: #f87171;
+      text-shadow: 0 0 24px rgba(248,113,113,0.8);
+    }
+
+    .wait-unit {
+      font-size: 18px;
+      color: #94a3b8;
+      margin-bottom: 10px;
+    }
+
+    .people-count {
+      font-size: 42px;
+      font-weight: 700;
+      color: #facc15;
+      text-shadow: 0 0 16px rgba(250,204,21,0.6);
+    }
+
+    .people-label {
+      font-size: 16px;
+      color: #e5e7eb;
+    }
+
+    .footer {
+      margin-top: 20px;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    /* Lane overview pills */
+    .lane-summary {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .lane-pill {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 13px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(55,65,81,0.9);
+      color: #e5e7eb;
+      min-width: 130px;
+    }
+
+    .lane-pill span {
+      display: block;
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .lane-pill-best {
+      border-color: rgba(34,197,94,0.9);
+      box-shadow: 0 0 16px rgba(34,197,94,0.4);
+    }
+
+    .lane-pill-busy {
+      border-color: rgba(234,179,8,0.9);
+    }
+
+    .lane-pill-critical {
+      border-color: rgba(248,113,113,0.9);
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="fullscreen-hint">
+  <span>Press F11 or</span>
+  <button class="fs-btn" onclick="enterFullscreen()">⛶ Fullscreen</button>
+</div>
+
+<div class="card-wrapper">
+  <div id="card" class="card normal">
+    <div class="title" id="main-title">Welcome</div>
+    <div class="subtitle" id="subtitle">We’ll direct you to the fastest lane</div>
+
+    <div id="queue-banner" class="queue-banner">
+      <span class="queue-dot"></span>
+      <span id="queue-text">You’re next in line!</span>
+    </div>
+
+    <div class="row">
+      <div class="label" id="wait-label">Fastest lane wait (approx)</div>
+      <div id="wait-time" class="wait-time normal">--</div>
+      <div class="wait-unit" id="wait-unit-text">seconds</div>
+    </div>
+
+    <div class="row">
+      <div class="label">People ahead in that lane (adults)</div>
+      <div id="people-count" class="people-count">--</div>
+      <div class="people-label" id="people-label-text">We’ll show you the best lane.</div>
+    </div>
+
+    <div class="row">
+      <div class="label">All lanes right now</div>
+      <div id="lane-summary" class="lane-summary"></div>
+    </div>
+
+    <div id="last-update" class="footer">Connecting to lanes…</div>
+  </div>
+</div>
+
+<script>
+  let displayedWait = null;
+  let countdownTimer = null;
+  let bestLaneId = null;
+
+  function enterFullscreen() {
+    const docEl = document.documentElement;
+    if (docEl.requestFullscreen) {
+      docEl.requestFullscreen();
+    } else if (docEl.webkitRequestFullscreen) {
+      docEl.webkitRequestFullscreen();
+    }
+  }
+
+  function classifyLoad(waitSeconds) {
+    if (waitSeconds === null || waitSeconds === undefined) return "normal";
+    if (waitSeconds >= 180) return "critical";
+    if (waitSeconds >= 90) return "busy";
+    return "normal";
+  }
+
+  function setVisualState(waitSeconds, customers) {
+    const card = document.getElementById("card");
+    const waitEl = document.getElementById("wait-time");
+    const subtitle = document.getElementById("subtitle");
+    const peopleLabel = document.getElementById("people-label-text");
+
+    const state = classifyLoad(waitSeconds);
+
+    card.classList.remove("normal", "busy", "critical");
+    waitEl.classList.remove("normal", "busy", "critical");
+
+    card.classList.add(state);
+    waitEl.classList.add(state);
+
+    if (customers === 0) {
+      peopleLabel.textContent = "No one is ahead of you.";
+    } else if (customers === 1) {
+      peopleLabel.textContent = "1 person ahead in that lane.";
+    } else {
+      peopleLabel.textContent = customers + " people ahead in that lane.";
+    }
+
+    if (waitSeconds === 0 && customers === 0) {
+      subtitle.textContent = "No wait – you can walk right up.";
+    } else {
+      subtitle.textContent = "Please follow the screen for the fastest lane.";
+    }
+  }
+
+  function updateVisualQueue(customers) {
+    const banner = document.getElementById("queue-banner");
+    const text = document.getElementById("queue-text");
+
+    if (customers <= 0) {
+      banner.classList.remove("visible");
+      return;
+    }
+
+    if (customers === 1) {
+      text.textContent = "You’re next in line!";
+    } else if (customers === 2) {
+      text.textContent = "Only two people ahead of you.";
+    } else {
+      text.textContent = customers + " people ahead – thank you for waiting.";
+    }
+    banner.classList.add("visible");
+  }
+
+  function startCountdown() {
+    if (countdownTimer) clearInterval(countdownTimer);
+
+    countdownTimer = setInterval(() => {
+      if (displayedWait === null) return;
+      if (displayedWait > 0) {
+        displayedWait -= 1;
+        document.getElementById("wait-time").textContent = displayedWait;
+      }
+    }, 1000);
+  }
+
+  // Decide best lane + global message from /lanes data
+  function pickBestLane(lanes) {
+    if (!lanes || lanes.length === 0) return null;
+
+    // Prefer lane with smallest wait; tie-break with fewer customers
+    let best = lanes[0];
+    function getWait(l) {
+      return Math.max(0, Math.round(l.estimated_wait_seconds || 0));
+    }
+    function getCust(l) {
+      return Math.max(0, l.customers_in_line || 0);
+    }
+
+    for (const l of lanes) {
+      const wBest = getWait(best);
+      const wCur  = getWait(l);
+      const cBest = getCust(best);
+      const cCur  = getCust(l);
+
+      if (wCur < wBest - 10) {        // at least 10s faster
+        best = l;
+      } else if (Math.abs(wCur - wBest) <= 10 && cCur < cBest) {
+        best = l;
+      }
+    }
+    return best;
+  }
+
+  function lanesSimilar(lanes) {
+    if (!lanes || lanes.length <= 1) return false;
+    let minW = Infinity, maxW = -Infinity;
+    let minC = Infinity, maxC = -Infinity;
+
+    for (const l of lanes) {
+      const w = Math.max(0, Math.round(l.estimated_wait_seconds || 0));
+      const c = Math.max(0, l.customers_in_line || 0);
+      if (w < minW) minW = w;
+      if (w > maxW) maxW = w;
+      if (c < minC) minC = c;
+      if (c > maxC) maxC = c;
+    }
+
+    return (maxW - minW) <= 20 && (maxC - minC) <= 1;
+  }
+
+  function lanesAllBusy(lanes) {
+    if (!lanes || lanes.length === 0) return false;
+    for (const l of lanes) {
+      const w = Math.max(0, Math.round(l.estimated_wait_seconds || 0));
+      const c = Math.max(0, l.customers_in_line || 0);
+      if (c < 2 || w < 90) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function updateLaneSummaryPills(lanes, bestLane) {
+    const container = document.getElementById("lane-summary");
+    container.innerHTML = "";
+
+    if (!lanes || lanes.length === 0) {
+      const span = document.createElement("div");
+      span.className = "people-label";
+      span.textContent = "Waiting for lane data…";
+      container.appendChild(span);
+      return;
+    }
+
+    function getState(waitSec) {
+      const state = classifyLoad(waitSec);
+      if (state === "critical") return "lane-pill lane-pill-critical";
+      if (state === "busy") return "lane-pill lane-pill-busy";
+      return "lane-pill";
+    }
+
+    for (const l of lanes) {
+      const laneId = l.lane_id;
+      const w = Math.max(0, Math.round(l.estimated_wait_seconds || 0));
+      const c = Math.max(0, l.customers_in_line || 0);
+
+      const pill = document.createElement("div");
+      pill.className = getState(w);
+      if (bestLane && laneId === bestLane.lane_id) {
+        pill.className += " lane-pill-best";
+      }
+
+      const mainText = document.createElement("div");
+      mainText.textContent = `Lane ${laneId}: ${c} in line, ~${w}s`;
+
+      const subText = document.createElement("span");
+      if (w === 0 && c === 0) {
+        subText.textContent = "No wait";
+      } else if (w < 60) {
+        subText.textContent = "Very fast";
+      } else if (w < 120) {
+        subText.textContent = "Moderate wait";
+      } else {
+        subText.textContent = "Slow / busy";
+      }
+
+      pill.appendChild(mainText);
+      pill.appendChild(subText);
+      container.appendChild(pill);
+    }
+  }
+
+  async function fetchLanes() {
+    try {
+      const res = await fetch("/lanes");
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+      const lanes = data.lanes || [];
+
+      if (!lanes || lanes.length === 0) {
+        document.getElementById("main-title").textContent = "Please wait";
+        document.getElementById("subtitle").textContent = "Setting up lane data…";
+        document.getElementById("wait-time").textContent = "--";
+        document.getElementById("people-count").textContent = "--";
+        document.getElementById("last-update").textContent = "Waiting for lane data…";
+        updateLaneSummaryPills([], null);
+        return;
+      }
+
+      const best = pickBestLane(lanes);
+      bestLaneId = best ? best.lane_id : null;
+
+      const mainTitle = document.getElementById("main-title");
+      const waitLabel = document.getElementById("wait-label");
+      const subtitle = document.getElementById("subtitle");
+
+      const allZero = lanes.every(l => (l.customers_in_line || 0) === 0 && (l.estimated_wait_seconds || 0) <= 5);
+
+      if (allZero) {
+        mainTitle.textContent = "No wait – any lane is fine";
+        subtitle.textContent = "All lanes are open with no line.";
+      } else if (lanesSimilar(lanes)) {
+        mainTitle.textContent = "All lanes are similar";
+        subtitle.textContent = "You can choose any open lane.";
+      } else if (lanesAllBusy(lanes)) {
+        mainTitle.textContent = "All lanes are busy";
+        subtitle.textContent = "Estimated waits around a few minutes. Thank you for your patience.";
+      } else if (best) {
+        mainTitle.textContent = "Fastest lane right now: Lane " + best.lane_id;
+        subtitle.textContent = "Please line up at Lane " + best.lane_id + " for the quickest checkout.";
+      } else {
+        mainTitle.textContent = "Follow the fastest lane";
+        subtitle.textContent = "We’ll guide you in a moment.";
+      }
+
+      const rawWait = best ? Math.max(0, Math.round(best.estimated_wait_seconds || 0)) : 0;
+      const customers = best ? Math.max(0, best.customers_in_line || 0) : 0;
+
+      displayedWait = rawWait;
+      document.getElementById("wait-time").textContent = displayedWait;
+      document.getElementById("people-count").textContent = customers;
+      document.getElementById("wait-unit-text").textContent = "seconds";
+      document.getElementById("last-update").textContent = "Updated just now";
+
+      waitLabel.textContent = best
+        ? "Approximate wait at the recommended lane"
+        : "Approximate wait";
+
+      updateVisualQueue(customers);
+      setVisualState(displayedWait, customers);
+      updateLaneSummaryPills(lanes, best);
+      startCountdown();
+    } catch (err) {
+      document.getElementById("last-update").textContent = "Waiting for lane data…";
+    }
+  }
+
+  fetchLanes();
+  setInterval(fetchLanes, 4000);
+</script>
+
+</body>
+</html>
+

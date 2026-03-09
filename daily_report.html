@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Checkout – Daily Queue Report</title>
+  <style>
+    body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        margin: 24px;
+        color: #111827;
+    }
+    h1 {
+        font-size: 22px;
+        margin-bottom: 4px;
+    }
+    h2 {
+        font-size: 18px;
+        margin-top: 24px;
+        margin-bottom: 8px;
+    }
+    .meta {
+        font-size: 14px;
+        color: #4b5563;
+        margin-bottom: 16px;
+    }
+    table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 13px;
+    }
+    th, td {
+        border: 1px solid #d1d5db;
+        padding: 6px 8px;
+        text-align: center;
+    }
+    th {
+        background: #f3f4f6;
+        font-weight: 600;
+    }
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 8px;
+    }
+    .kpi {
+        border: 1px solid #d1d5db;
+        padding: 8px 10px;
+        border-radius: 6px;
+    }
+    .kpi-label {
+        font-size: 12px;
+        color: #6b7280;
+    }
+    .kpi-value {
+        font-size: 18px;
+        font-weight: 600;
+    }
+    .footer-note {
+        font-size: 11px;
+        color: #6b7280;
+        margin-top: 20px;
+    }
+    @media print {
+        body { margin: 12px; }
+    }
+  </style>
+</head>
+<body>
+<h1>AI Checkout – Daily Queue Report</h1>
+<div class="meta">
+  Date: <strong>{{ summary.date }}</strong> ·
+  Lanes observed: {{ summary.lanes|length }} ·
+  Total snapshots: {{ summary.total_snapshots }}
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-label">Average customers in line</div>
+    <div class="kpi-value">{{ "%.2f"|format(summary.avg_customers_in_line) }}</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Average wait (seconds)</div>
+    <div class="kpi-value">{{ "%.0f"|format(summary.avg_wait_seconds) }}</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">% within 2 minutes</div>
+    <div class="kpi-value">{{ "%.1f"|format(summary.pct_within_120s) }}%</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Snapshots over 120s wait</div>
+    <div class="kpi-value">{{ summary.snapshots_over_120s }}</div>
+  </div>
+</div>
+
+<h2>Hourly Service Performance</h2>
+<table>
+  <thead>
+  <tr>
+    <th>Hour</th>
+    <th>Avg customers in line</th>
+    <th>Avg wait (sec)</th>
+    <th>% within 2 minutes</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for row in summary.by_hour %}
+  <tr>
+    <td>{{ "%02d:00"|format(row.hour) }}</td>
+    <td>{{ "%.2f"|format(row.avg_customers) }}</td>
+    <td>{{ "%.0f"|format(row.avg_wait) }}</td>
+    <td>{{ "%.1f"|format(row.pct_within_120s) }}%</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<div class="footer-note">
+  Generated automatically by AI Checkout using lane_events.csv.
+  Print this page or use “Save as PDF” in your browser to archive or share.
+</div>
+</body>
+</html>

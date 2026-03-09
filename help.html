@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Checkout – Help Center</title>
+    <style>
+        body {
+            font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+            background:#020617;
+            color:#e5e7eb;
+            margin:0;
+            padding:32px 40px;
+        }
+        .page { max-width:900px; margin:0 auto; }
+
+        h1 {
+            font-size:28px;
+            margin-bottom:6px;
+        }
+        h2 {
+            font-size:20px;
+            margin-top:24px;
+            margin-bottom:8px;
+        }
+        p, ul {
+            font-size:15px;
+            color:#cbd5f5;
+            line-height:1.55;
+        }
+        code {
+            background:#0f172a;
+            padding:2px 5px;
+            border-radius:4px;
+            font-size:13px;
+        }
+
+        .card {
+            background:#020617;
+            border-radius:16px;
+            padding:18px 22px;
+            box-shadow:0 20px 45px rgba(0,0,0,0.65);
+            margin-top:18px;
+        }
+        a { color:#60a5fa; text-decoration:none }
+        a:hover { text-decoration:underline }
+
+        .pill {
+            display:inline-block;
+            padding:4px 10px;
+            background:#1d4ed8;
+            border-radius:999px;
+            color:white;
+            font-size:11px;
+            margin-left:6px;
+        }
+
+        .warning {
+            background:#7f1d1d;
+            padding:10px 14px;
+            border-radius:10px;
+            color:#fee2e2;
+            margin-top:10px;
+            font-size:14px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="page">
+
+    <h1>AI Checkout – Help Center <span class="pill">INFO</span></h1>
+    <p>Your all-in-one guide for setup, calibration, troubleshooting, and optimizing lane analytics.</p>
+
+    <!-- SYSTEM OVERVIEW -->
+    <div class="card">
+        <h2>System Overview</h2>
+        <p>This system monitors checkout lanes using AI and computer vision:</p>
+        <ul>
+            <li>Detects adults, children, and items</li>
+            <li>Estimates wait time</li>
+            <li>Calculates line length</li>
+            <li>Identifies overloaded lanes</li>
+            <li>Displays a customer countdown screen</li>
+            <li>Generates lane history & heatmaps</li>
+            <li>Logs all events to <code>logs/lane_events.csv</code></li>
+        </ul>
+
+        <p>Flow diagram:</p>
+        <pre style="font-size:13px;color:#a5b4fc;">
+Camera → YOLO + ByteTrack → Lane Analytics → server.py → Dashboard + Customer Screen
+                                          ↓
+                             lane_events.csv (history)
+    </pre>
+    </div>
+
+    <!-- CAMERA & FPS -->
+    <div class="card">
+        <h2>Camera Tips & Performance</h2>
+        <ul>
+            <li>Laptop webcams → unstable exposure + limited FOV + low FPS</li>
+            <li>4K external webcams → stable, wide, perfect for slanted lines</li>
+            <li>Avoid running multiple apps that access the camera at the same time</li>
+            <li>YOLOv8x6 = very accurate, but your GPU must be used (CUDA ON)</li>
+            <li>Close Chrome tabs for highest FPS</li>
+        </ul>
+        <p><strong>Tip:</strong> Built-in webcams usually can't handle slanted-line geometry.
+            They distort too much + FOV is too small. Use vertical band mode for laptop tests.</p>
+    </div>
+
+    <!-- ADULT COUNT ISSUES -->
+    <div class="card">
+        <h2>Why “Adults in Line” Might Show 0</h2>
+        <ul>
+            <li>Slanted line enabled but camera angle is too flat</li>
+            <li>Wrong near/far points in <code>config.yaml</code></li>
+            <li>Track age too high (use <code>min_track_age_frames: 1</code>)</li>
+            <li>Lighting too dark or overexposed</li>
+            <li>Laptop webcam too zoomed-in</li>
+        </ul>
+        <div class="warning">Fix: Set <code>use_slanted_line: false</code> until your 4K camera arrives.</div>
+    </div>
+
+    <!-- CONFIG -->
+    <div class="card">
+        <h2>Main Configuration (config.yaml)</h2>
+        <p>Important keys:</p>
+        <ul>
+            <li><code>model.path</code> – YOLO model</li>
+            <li><code>queue_geometry.use_slanted_line</code> – slanted vs vertical band</li>
+            <li><code>tracking.min_track_age_frames</code> – helps stabilizing counts</li>
+            <li><code>screenshots.enabled</code> – saves images on big alerts</li>
+            <li><code>lanes</code> – camera sources (“0”, “1”, RTSP, etc.)</li>
+        </ul>
+        <p>Restart system after editing the config.</p>
+    </div>
+
+    <!-- CALIBRATION -->
+    <div class="card">
+        <h2>Slanted-Line Calibration</h2>
+        <p>Use this ONLY when your 4K lane camera is installed.</p>
+        <ul>
+            <li>Run <code>python calibrate_queue.py</code></li>
+            <li>Click near the cashier → NEAR point</li>
+            <li>Click far down the aisle → FAR point</li>
+            <li>Press <strong>s</strong> to save</li>
+            <li>System automatically updates <code>config.yaml</code></li>
+        </ul>
+        <div class="warning">Do NOT use slanted-line mode on laptop webcams — adult count will break.</div>
+    </div>
+
+    <!-- HEATMAP -->
+    <div class="card">
+        <h2>Shift Heatmap (Full-Day Load)</h2>
+        <p>Heatmaps are built from <code>logs/lane_events.csv</code> using timestamps.</p>
+        <ul>
+            <li>Each lane update is logged with time, customers, wait, items</li>
+            <li>The dashboard heatmap uses 24-hour bins</li>
+            <li>Shows peak load by hour</li>
+            <li>Great for staffing decisions</li>
+            <li>Automatically updates through the new API: <code>/metrics/heatmap</code></li>
+        </ul>
+        <p>Tip: the system automatically handles multiple lanes.</p>
+    </div>
+
+    <!-- TROUBLESHOOTING -->
+    <div class="card">
+        <h2>Troubleshooting</h2>
+        <ul>
+            <li><strong>No camera feed?</strong>
+                Close Zoom/Discord/Camera app → restart app → ensure webcam access allowed.</li>
+            <li><strong>FPS too low?</strong>
+                Reduce <code>imgsz</code> to 720 or switch to <code>yolov8l.pt</code>.</li>
+            <li><strong>0 adults?</strong>
+                Set <code>use_slanted_line: false</code>.</li>
+            <li><strong>Camera error -1072873821</strong>
+                Windows MSMF conflict → another app is using the camera.</li>
+            <li><strong>Alerts not showing?</strong>
+                Check <code>lane_events.csv</code> is being written.</li>
+            <li><strong>Dashboard empty?</strong>
+                Ensure backend is running: <code>python server.py</code></li>
+        </ul>
+    </div>
+
+    <!-- CUSTOMER SCREEN -->
+    <div class="card">
+        <h2>Customer Screen</h2>
+        <p>The customer UI shows:</p>
+        <ul>
+            <li>Big countdown timer</li>
+            <li>People ahead in line</li>
+            <li>Dynamic colors (green → yellow → red)</li>
+            <li>“You’re next in line!” banner</li>
+        </ul>
+        <p>Open at: <code>/customer</code></p>
+    </div>
+
+</div>
+</body>
+</html>
