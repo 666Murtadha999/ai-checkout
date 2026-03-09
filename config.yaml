@@ -1,0 +1,41 @@
+model:
+  path: yolov8x6.pt
+  precision: "fp16"
+  imgsz: 750
+  conf: 0.35
+  iou: 0.45
+smoothing:
+  window_size: 2
+  update_every_n_frames: 3
+modes:
+  default: calibration
+  calibration:
+    draw_boxes: true
+    draw_labels: true
+    draw_line_band: true
+    draw_slanted_line: true
+  production:
+    draw_boxes: false
+    draw_labels: false
+    draw_line_band: true
+    draw_slanted_line: true
+screenshots:
+  enabled: true
+  out_dir: logs/screenshots
+fps_monitor:
+  enabled: true
+queue_geometry:
+  use_slanted_line: false
+  line_length_feet: 40.0
+  corridor_width_px: 90
+  point_near:
+  - 640.0
+  - 400.0
+  point_far:
+  - 640.0
+  - 10.0
+tracking:
+  min_track_age_frames: 3
+lanes:
+- id: 1
+  source: '0'
